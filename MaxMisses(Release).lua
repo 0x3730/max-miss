@@ -1,7 +1,7 @@
 local ref = gui.Reference("Ragebot", "Accuracy")
 local screenSizeX, screenSizeY = draw.GetScreenSize();
 local guiSettingsBlock = gui.Groupbox(ref, "Max Misses", 16, 500, 295, 250);
-local guiClearKey = gui.Keybox(guiSettingsBlock , "clear_key", "Clear statistics (Manualy)", 0);
+local guiClearKey = gui.Keybox(guiSettingsBlock , "clear_key", "Clear statistics (Manually)", 0);
 local guiMissesSlider = gui.Slider(guiSettingsBlock, "miss_slider", "Count of misses", 1, 1, 10);
 local guiListViewX = gui.Slider(guiSettingsBlock, "listview_x", "Logger Positon (Left)", 500, 0, screenSizeX);
 local guiListViewY = gui.Slider(guiSettingsBlock, "listview_y", "Logger Positon (Top)", 500, 0, screenSizeY);
