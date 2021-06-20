@@ -12,7 +12,6 @@ local guiLoggerYesColor = gui.ColorPicker(guiSettingsBlock, "listview_yes_color"
 local guiLoggerNopeColor = gui.ColorPicker(guiSettingsBlock, "listview_nope_color", "Logger \"Nope\" Color", 74, 224, 72, 255);
 
 local PlayersList = {};
-local lastSimtime = {};
 local wTypes = { 'shared', 'zeus', 'pistol', 'hpistol', 'smg', 'rifle', 'shotgun', 'scout', 'asniper', 'sniper', 'lmg' }
 
 local isFired = false;
