@@ -210,6 +210,8 @@ local function event_handler(event)
 	elseif event:GetName() == "round_start" then
 		PlayersList = {};
 		fill_players_list();
+		restore_user_cfg();
+		cfgSaved = false;
 		isFired = false;
 		isHit = false;
 	else
@@ -218,13 +220,6 @@ local function event_handler(event)
 				if input.IsButtonDown(1) then return; end
 				
 				isFired = true;
-				
-				local targetIndex = find_player(aimTarget:GetName());
-				if targetIndex == 0 then return; end
-				if PlayersList[targetIndex][2] >= guiMissesSlider:GetValue() then --lololo shit code, but its works xD
-					restore_user_cfg();
-					cfgSaved = false;
-				end
 			end
 		elseif event:GetName() == "player_hurt" then
 			local localPlayer = entities.GetLocalPlayer();
@@ -278,6 +273,11 @@ local function aimbot_target_hook(pEntity)
 			cfgSaved = true;
 		end
 		set_baim();
+	else
+		if cfgSaved then
+			restore_user_cfg();
+			cfgSaved = false;
+		end
 	end
 end
 
