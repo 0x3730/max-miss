@@ -41,21 +41,6 @@ function split(str, character)
   return result
 end
 
-function tprint(tbl, indent)
-  if not indent then indent = 0 end
-  for k, v in pairs(tbl) do
-    formatting = string.rep("  ", indent) .. k .. ": "
-    if type(v) == "table" then
-      print(formatting)
-      tprint(v, indent+1)
-    elseif type(v) == 'boolean' then
-      print(formatting .. tostring(v))      
-    else
-      print(formatting .. v)
-    end
-  end
-end
-
 local function GetSizeOfLargestName()
 	local maxW = 0;
 	for i = 1, #PlayersList do
@@ -271,14 +256,14 @@ local function shots_handler()
 			shotsCount = shotsCount - 1;
 			goto continue;
 		end
-
+			
 		if not shotsList[i][3] then
 			local localPlayer = entities.GetLocalPlayer();
 			local playerResources = entities.GetPlayerResources();
 			iPing = playerResources:GetPropInt("m_iPing", localPlayer:GetIndex());
 
 			if i == shotsCount then
-				if globals.TickCount() - shotsList[i][2] < iPing then
+				if globals.TickCount() - shotsList[i][2] < iPing + 5 then
 					goto continue;
 				end
 			end
