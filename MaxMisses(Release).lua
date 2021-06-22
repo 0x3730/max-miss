@@ -1,7 +1,7 @@
 local ref = gui.Reference("Ragebot", "Accuracy")
 local screenSizeX, screenSizeY = draw.GetScreenSize();
-local guiSettingsBlock = gui.Groupbox(ref, "Max Misses", 16, 500, 295, 250);
-local guiClearKey = gui.Keybox(guiSettingsBlock , "clear_key", "Clear statistics (Manually)", 0);
+local guiSettingsBlock = gui.Groupbox(ref, "Max Miss", 16, 500, 295, 250);
+local guiClearKey = gui.Keybox(guiSettingsBlock , "clear_key", "Clear statistics (Manual)", 0);
 local guiMissesSlider = gui.Slider(guiSettingsBlock, "miss_slider", "Count of misses", 1, 1, 10);
 local guiListViewX = gui.Slider(guiSettingsBlock, "listview_x", "Logger Positon (Left)", 500, 0, screenSizeX);
 local guiListViewY = gui.Slider(guiSettingsBlock, "listview_y", "Logger Positon (Top)", 500, 0, screenSizeY);
@@ -11,16 +11,23 @@ local guiLoggerMarginColor = gui.ColorPicker(guiSettingsBlock, "listview_margin_
 local guiLoggerYesColor = gui.ColorPicker(guiSettingsBlock, "listview_yes_color", "Logger \"Yes\" Color", 224, 72, 72, 255);
 local guiLoggerNopeColor = gui.ColorPicker(guiSettingsBlock, "listview_nope_color", "Logger \"Nope\" Color", 74, 224, 72, 255);
 
-local PlayersList = {};
-local wTypes = { 'shared', 'zeus', 'pistol', 'hpistol', 'smg', 'rifle', 'shotgun', 'scout', 'asniper', 'sniper', 'lmg' }
+-- Class
+local PlayersList = {}; -- 1 - Name | 2 - Misses
+local wTypes = { 'shared', 'zeus', 'pistol', 'hpistol', 'smg', 'rifle', 'shotgun', 'scout', 'asniper', 'sniper', 'lmg' };
+--
 
+--Temp Vars
 local isFired = false;
 local isHit = false;
 local cfgChanged = false;
 local aimTarget = nil;
 local oldHitBoxses = {};
+--
+
+-- Fonts
 local courierFont = draw.CreateFont("Courier New", 15);
 local courierFont2 = draw.CreateFont("Courier New", 12);
+--
 
 function split(str, character)
   result = {}
@@ -145,6 +152,7 @@ local function draw_lua_info()
 	local tablePosY = guiListViewY:GetValue();
 	local tablePosEndY = tablePosY + 19;
 	
+	--Draw Listview footer
 	draw.Color(guiLoggerBackColor:GetValue());
 	draw.FilledRect(tablePosX, tablePosY, tablePosEndX, tablePosEndY);
 	
@@ -162,12 +170,16 @@ local function draw_lua_info()
 		local playerInfo = PlayersList[i];
 		local playerHitboxes = "";
 		
+		-- Draw background
 		draw.Color(r, g, b, 110);
 		draw.FilledRect(tablePosX, currentY, tablePosEndX, currentY + 19);
-			
+		
+		-- Draw Margin
+		
 		draw.Color(guiLoggerMarginColor:GetValue());
 		draw.FilledRect(tablePosX, currentY + 1, tablePosX + leftMargin - 2, currentY + 18);
 		
+		-- Draw Player Info
 		draw.Color(guiLoggerTextColor:GetValue());
 		draw.TextShadow(leftMargin + tablePosX, currentY + 4, i);
 		draw.TextShadow(leftMargin + tablePosX + firstColumnSize, currentY + 4, playerInfo[1]);
@@ -200,14 +212,19 @@ local function event_handler(event)
 		fill_players_list();
 		isFired = false;
 		isHit = false;
-		aimTarget = nil;
 	else
 		if not aimTarget then return; end
 		
 		if event:GetName() == "weapon_fire" then
 			if entities.GetByUserID(event:GetInt("userid")):GetIndex() == entities.GetLocalPlayer():GetIndex() then
-				if not aimTarget:GetIndex() then return; end
 				isFired = true;
+				
+				local targetIndex = find_player(aimTarget:GetName());
+				if targetIndex == 0 then return; end
+				if PlayersList[targetIndex][2] >= guiMissesSlider:GetValue() then --lololo shit code, but its works xD
+					restore_user_cfg();
+					cfgChanged = false;
+				end
 			end
 		elseif event:GetName() == "player_hurt" then
 			local localPlayer = entities.GetLocalPlayer();
@@ -221,7 +238,7 @@ local function event_handler(event)
 			if attackerIndex ~= localIndex then
 				return;
 			end
-			
+
 			if localTeam == victim:GetTeamNumber() then
 				return;
 			end
@@ -251,14 +268,10 @@ end
 
 local function aimbot_target_hook(pEntity)
     aimTarget = pEntity;
-end
-
-local function baim_handler()
-	if not aimTarget then return; end
 	
-	if not aimTarget:GetIndex() then return; end
+	local targetIndex = find_player(pEntity:GetName());
+	if targetIndex == 0 then return; end
 	
-	local targetIndex = find_player(aimTarget:GetName());	
 	if PlayersList[targetIndex][2] >= guiMissesSlider:GetValue() then
 		if not cfgChanged then
 			save_user_cfg();
@@ -288,16 +301,17 @@ local function on_lua_unload()
 	restore_user_cfg();
 end
 
+-- Get rights for listeners
 client.AllowListener("player_disconnect");
 client.AllowListener("weapon_fire");
 client.AllowListener("player_hurt");
 client.AllowListener("round_start");
+--
 
 callbacks.Register("Draw", fill_players_list);
 callbacks.Register("Draw", draw_lua_info);
 callbacks.Register("FireGameEvent", event_handler);
 callbacks.Register("AimbotTarget", aimbot_target_hook);
-callbacks.Register("Draw", baim_handler);
 callbacks.Register("Draw", shots_handler);
 callbacks.Register("Draw", self_connection_handler);
 callbacks.Register("Unload", on_lua_unload);
