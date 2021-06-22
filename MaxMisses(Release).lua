@@ -17,11 +17,11 @@ local wTypes = { 'shared', 'zeus', 'pistol', 'hpistol', 'smg', 'rifle', 'shotgun
 --
 
 --Temp Vars
-local isFired = false;
-local isHit = false;
 local cfgSaved = false;
 local aimTarget = nil;
 local oldHitBoxses = {};
+local shotsList = {};
+local shotsCount = 0;
 --
 
 -- Fonts
@@ -39,6 +39,21 @@ function split(str, character)
   end
 
   return result
+end
+
+function tprint(tbl, indent)
+  if not indent then indent = 0 end
+  for k, v in pairs(tbl) do
+    formatting = string.rep("  ", indent) .. k .. ": "
+    if type(v) == "table" then
+      print(formatting)
+      tprint(v, indent+1)
+    elseif type(v) == 'boolean' then
+      print(formatting .. tostring(v))      
+    else
+      print(formatting .. v)
+    end
+  end
 end
 
 local function GetSizeOfLargestName()
@@ -137,6 +152,8 @@ local function draw_lua_info()
 			for i = 1, #PlayersList do
 				PlayersList[i][2] = 0;
 			end
+			restore_user_cfg();
+			cfgSaved = false;
 		end
 	end
 	
@@ -209,17 +226,18 @@ local function event_handler(event)
 		end
 	elseif event:GetName() == "round_start" then
 		PlayersList = {};
+		shotsList = {};
+		shotsCount = 0;
 		fill_players_list();
 		restore_user_cfg();
 		cfgSaved = false;
-		isFired = false;
-		isHit = false;
 	else
 		if event:GetName() == "weapon_fire" then
 			if entities.GetByUserID(event:GetInt("userid")):GetIndex() == entities.GetLocalPlayer():GetIndex() then
 				if input.IsButtonDown(1) then return; end
 				
-				isFired = true;
+				table.insert(shotsList, {aimTarget:GetName(), globals.TickCount(), false});
+				shotsCount = shotsCount + 1;
 			end
 		elseif event:GetName() == "player_hurt" then
 			local localPlayer = entities.GetLocalPlayer();
@@ -239,31 +257,44 @@ local function event_handler(event)
 			end
 			
 			if aimTarget:GetIndex() == victimIndex then
-				isHit = true;
+				shotsList[shotsCount][3] = true;
 			end
 		end
 	end
 end
 
 local function shots_handler()
-	if not aimTarget then return; end
-	
-	if not aimTarget:GetIndex() then return; end
-	
-	if isFired then
-		local targetIndex = find_player(aimTarget:GetName());
-		
-		if not isHit then
+	for i = 1, #shotsList do
+		local targetIndex = find_player(shotsList[i][1]);
+		if targetIndex == 0 then 
+			table.remove(shotsList, i); 
+			shotsCount = shotsCount - 1;
+			goto continue;
+		end
+
+		if not shotsList[i][3] then
+			local localPlayer = entities.GetLocalPlayer();
+			local playerResources = entities.GetPlayerResources();
+			iPing = playerResources:GetPropInt("m_iPing", localPlayer:GetIndex());
+
+			if i == shotsCount then
+				if globals.TickCount() - shotsList[i][2] < iPing then
+					goto continue;
+				end
+			end
 			PlayersList[targetIndex][2] = PlayersList[targetIndex][2] + 1;
 		end
-		isHit = false;
-		isFired = false;
+		
+		table.remove(shotsList, i);
+		shotsCount = shotsCount - 1;
+		::continue::
 	end
 end
 
 local function aimbot_target_hook(pEntity)
-    aimTarget = pEntity;
+	if not pEntity then return; end
 	
+    aimTarget = pEntity;
 	local targetIndex = find_player(pEntity:GetName());
 	if targetIndex == 0 then return; end
 	
@@ -274,7 +305,7 @@ local function aimbot_target_hook(pEntity)
 		end
 		set_baim();
 	else
-		if cfgSaved then
+		if cfgChanged then
 			restore_user_cfg();
 			cfgSaved = false;
 		end
@@ -285,8 +316,8 @@ local function self_connection_handler()
 	if not entities.GetLocalPlayer() then
 		if PlayersList[1] then
 			PlayersList = {};
-			isFired = false;
-			isHit = false;
+			shotsList = {};
+			shotsCount = 0;
 			aimTarget = nil;
 		end
 	end
