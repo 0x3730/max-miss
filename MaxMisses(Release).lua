@@ -19,7 +19,7 @@ local wTypes = { 'shared', 'zeus', 'pistol', 'hpistol', 'smg', 'rifle', 'shotgun
 --Temp Vars
 local isFired = false;
 local isHit = false;
-local cfgChanged = false;
+local cfgSaved = false;
 local aimTarget = nil;
 local oldHitBoxses = {};
 --
@@ -223,7 +223,7 @@ local function event_handler(event)
 				if targetIndex == 0 then return; end
 				if PlayersList[targetIndex][2] >= guiMissesSlider:GetValue() then --lololo shit code, but its works xD
 					restore_user_cfg();
-					cfgChanged = false;
+					cfgSaved = false;
 				end
 			end
 		elseif event:GetName() == "player_hurt" then
@@ -273,16 +273,11 @@ local function aimbot_target_hook(pEntity)
 	if targetIndex == 0 then return; end
 	
 	if PlayersList[targetIndex][2] >= guiMissesSlider:GetValue() then
-		if not cfgChanged then
+		if not cfgSaved then
 			save_user_cfg();
-			cfgChanged = true;
+			cfgSaved = true;
 		end
 		set_baim();
-	else
-		if cfgChanged then
-			restore_user_cfg();
-			cfgChanged = false;
-		end
 	end
 end
 
