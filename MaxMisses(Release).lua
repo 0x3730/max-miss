@@ -217,6 +217,8 @@ local function event_handler(event)
 		
 		if event:GetName() == "weapon_fire" then
 			if entities.GetByUserID(event:GetInt("userid")):GetIndex() == entities.GetLocalPlayer():GetIndex() then
+				if input.IsButtonDown(1) then return; end
+				
 				isFired = true;
 				
 				local targetIndex = find_player(aimTarget:GetName());
