@@ -225,6 +225,8 @@ local function event_handler(event)
 				shotsCount = shotsCount + 1;
 			end
 		elseif event:GetName() == "player_hurt" then
+			if not shotsList[1] then return; end
+			
 			local localPlayer = entities.GetLocalPlayer();
 			local localIndex = localPlayer:GetIndex();
 			local localTeam = localPlayer:GetTeamNumber();
@@ -241,14 +243,19 @@ local function event_handler(event)
 				return;
 			end
 			
-			if aimTarget:GetIndex() == victimIndex then
-				shotsList[shotsCount][3] = true;
+			for i = 1, #shotsList do
+				if shotsList[i][1] == victim:GetName() and not shotsList[i][3] then
+					shotsList[i][3] = true;
+					break;
+				end
 			end
 		end
 	end
 end
 
 local function shots_handler()
+	if not shotsList[1] then return; end
+
 	for i = 1, #shotsList do
 		local targetIndex = find_player(shotsList[i][1]);
 		if targetIndex == 0 then 
