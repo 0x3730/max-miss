@@ -1,5 +1,5 @@
 local ref = gui.Reference("Ragebot", "Accuracy")
-local guiSettingsBlock = gui.Groupbox(ref, "Max Misses", 16, 500, 295, 250);
+local guiSettingsBlock = gui.Groupbox(ref, "Max Misses", 16, 550, 295, 250);
 local guiClearKey = gui.Keybox(guiSettingsBlock , "clear_key", "Clear statistics (Manual)", 0);
 local guiMissesSlider = gui.Slider(guiSettingsBlock, "miss_slider", "Count of max misses", 1, 1, 10);
 
